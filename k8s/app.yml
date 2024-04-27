@@ -22,7 +22,12 @@ spec:
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-   name: web
+   name: mongodb
+   labels:
+      app: mongo
+      project: roboshop
+      service: mongo
+      env: dev
 spec:
    selector:
       matchLabels:
