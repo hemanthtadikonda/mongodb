@@ -2,63 +2,76 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-   name: redis
+   name: mysql
+---
+apiVersion: v1
+kind: Secret
+metadata:
+   name: mysql-cred
+data:
+   MYSQL_ROOT_PASSWORD: dmFsdWUtMg0KDQo=
 ---
 apiVersion: v1
 kind: Service
 metadata:
-   name: redis
+   name: mysqldb
    labels:
-      app: redis
+      app: mysql
       project: roboshop
-      service: redis
+      service: mysqldb
       env: dev
 spec:
    ports:
       -  protocol: TCP
-         port: 6379
-         targetPort: 6379
+         port: 3306
+         targetPort: 3306
    clusterIP: None
    selector:
-      app: redis
+      app: mysql
       project: roboshop
-      service: redis
+      service: mysqldb
       env: dev
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-   name: redis
+   name: mysql
    labels:
-      app: redis
+      app: mysql
       project: roboshop
-      service: redis
+      service: mysqldb
       env: dev
 spec:
    selector:
       matchLabels:
-         app: redis
+         app: mysql
          project: roboshop
-         service: redis
+         service: mysqldb
          env: dev
-   serviceName: "redis"
+   serviceName: "mysqldb"
    replicas: 1
    minReadySeconds: 10 # by default is 0
    template:
       metadata:
          labels:
-            app: redis
+            app: mysql
             project: roboshop
-            service: redis
+            service: mysqldb
             env: dev
       spec:
-         serviceAccountName: redis
+         serviceAccountName: mysql
          terminationGracePeriodSeconds: 10
          containers:
-            - name: redis
-              image: redis
+            - name: mysqldb
+              image: hemanthtadikonda/mysql:1.0.0
               ports:
-                 - containerPort: 6379
+                 - containerPort: 3306
+              env:
+                 -  name: MYSQL_ROOT_PASSWORD
+                    valueFrom:
+                       secretKeyRef:
+                          name: mysql-cred
+                          key: MYSQL_ROOT_PASSWORD
               resources:
                  requests:
                     memory: "500Mi"
