@@ -1,0 +1,80 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+   name: redis
+---
+apiVersion: v1
+kind: Service
+metadata:
+   name: redis
+   labels:
+      app: redis
+      project: roboshop
+      service: redis
+      env: dev
+spec:
+   ports:
+      -  protocol: TCP
+         port: 27017
+         targetPort: 27017
+   clusterIP: None
+   selector:
+      app: redis
+      project: roboshop
+      service: redis
+      env: dev
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+   name: redis
+   labels:
+      app: redis
+      project: roboshop
+      service: redis
+      env: dev
+spec:
+   selector:
+      matchLabels:
+         app: redis
+         project: roboshop
+         service: redis
+         env: dev
+   serviceName: "redis"
+   replicas: 1
+   minReadySeconds: 10 # by default is 0
+   template:
+      metadata:
+         labels:
+            app: redis
+            project: roboshop
+            service: redis
+            env: dev
+      spec:
+         serviceAccountName: redis
+         terminationGracePeriodSeconds: 10
+         containers:
+            - name: redis
+              image: redis
+              ports:
+                 - containerPort: 27017
+              resources:
+                 requests:
+                    memory: "500Mi"
+                    cpu: "250m"
+                 limits:
+                    memory: "500Mi"
+                    cpu: "250m"
+#              volumeMounts:
+#                 - name: www
+#                   mountPath: /usr/share/nginx/html
+#   volumeClaimTemplates:
+#      - metadata:
+#           name: www
+#        spec:
+#           accessModes: [ "ReadWriteOnce" ]
+#           storageClassName: "my-storage-class"
+#           resources:
+#              requests:
+#                 storage: 1Gi
